@@ -8,12 +8,12 @@ use arrow_array::{RecordBatch, UInt64Array};
 use futures::{StreamExt, TryStreamExt};
 use lance::io::ObjectStore;
 use lance_core::{cache::LanceCache, utils::futures::FinallyStreamExt};
-use lance_encoding::decoder::DecoderPlugins;
+use lance_encoding::decoder::{DecoderPlugins, FilterExpression};
 use lance_file::{
     reader::{FileReader, FileReaderOptions},
     writer::{FileWriter, FileWriterOptions},
 };
-use lance_index::scalar::IndexReader;
+use lance_io::ReadBatchParams;
 use lance_io::{
     scheduler::{ScanScheduler, SchedulerConfig},
     utils::CachedFileSize,
@@ -239,7 +239,20 @@ impl Shuffler {
                     )
                     .await?;
                     // Need to read the entire file in a single batch for in-memory shuffling
-                    let batch = reader.read_record_batch(0, reader.num_rows()).await?;
+                    let mut stream = reader
+                        .read_stream(
+                            ReadBatchParams::RangeFull,
+                            reader.num_rows() as u32,
+                            1,
+                            FilterExpression::no_filter(),
+                        )
+                        .await?;
+                    let batch =
+                        futures::StreamExt::next(&mut stream)
+                            .await
+                            .ok_or_else(|| Error::Runtime {
+                                message: "shuffle file produced no batches".to_string(),
+                            })??;
                     let mut rng = rng.lock().unwrap_or_else(|e| e.into_inner());
                     Self::shuffle_batch(&batch, &mut rng, clump_size)
                 }
