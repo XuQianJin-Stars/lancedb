@@ -69,10 +69,10 @@ semver = "1.0.25"
 chrono = "0.4"
 
 # lance's [patch.crates-io] does not propagate to dependents; mirror it here so
-# yanked crates.io opendal 0.58.0 is replaced by the GooseFS safe-commit fork.
+# yanked crates.io opendal 0.58.0 is replaced by the GooseFS fork used by lance tip.
 [patch.crates-io]
-opendal = { git = "https://github.com/XuQianJin-Stars/opendal", branch = "fix/goosefs-safe-commit-handler" }
-object_store_opendal = { git = "https://github.com/XuQianJin-Stars/opendal", branch = "fix/goosefs-safe-commit-handler" }
+opendal = { git = "https://github.com/XuQianJin-Stars/opendal", branch = "chore/bump-goosefs-sdk-to-0.1.8" }
+object_store_opendal = { git = "https://github.com/XuQianJin-Stars/opendal", branch = "chore/bump-goosefs-sdk-to-0.1.8" }
 
 [profile.ci]
 debug = "line-tables-only"

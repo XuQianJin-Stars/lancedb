@@ -50,8 +50,8 @@ lance-namespace = { workspace = true }
 lance-namespace-impls = { workspace = true }
 metrics = { workspace = true, optional = true }
 metrics-util = { workspace = true, optional = true }
-# Pin goosefs-sdk to 0.1.7 for the fix/goosefs-safe-commit-handler lance branch.
-goosefs-sdk = { version = "=0.1.7", optional = true }
+# Pin goosefs-sdk to 0.1.8 to match fix/goosefs-safe-commit-handler lance tip.
+goosefs-sdk = { version = "=0.1.8", optional = true }
 moka = { workspace = true }
 pin-project = { workspace = true }
 tokio = { version = "1.23", features = ["rt-multi-thread", "sync"] }
