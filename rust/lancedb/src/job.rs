@@ -98,21 +98,30 @@ impl TerminalResult {
     }
 
     fn decode<T: DeserializeOwned>(self) -> Result<T> {
+        // `Job::new_typed` is also used by the in-process (local) path through
+        // `Job::spawned`, so this decoder is reachable with `feature = "remote"`
+        // disabled. `Error::Http` is gated behind that feature, so the typed
+        // decoder folds both branches into the backend-neutral `Other` variant
+        // when a `request_id` is available. The message is preserved so the
+        // existing tests and downstream callers keep their string assertions.
         let value = self.value.ok_or_else(|| match &self.request_id {
-            Some(request_id) => Error::Http {
-                source: "successful typed job response did not contain a result".into(),
-                request_id: request_id.clone(),
-                status_code: None,
+            Some(request_id) => Error::Other {
+                message: format!(
+                    "successful typed job response did not contain a result \
+                     (request_id={request_id})"
+                ),
+                source: None,
             },
             None => Error::Runtime {
                 message: "successful typed job did not contain a result".to_string(),
             },
         })?;
         serde_json::from_value(value).map_err(|error| match self.request_id {
-            Some(request_id) => Error::Http {
-                source: format!("failed to parse typed job result: {error}").into(),
-                request_id,
-                status_code: None,
+            Some(request_id) => Error::Other {
+                message: format!(
+                    "failed to parse typed job result (request_id={request_id}): {error}"
+                ),
+                source: None,
             },
             None => Error::Runtime {
                 message: format!("failed to parse typed job result: {error}"),
